@@ -7,7 +7,7 @@
     <hr>
     <div class="row">
         {% for listing in listings %}
-        <a class="col-12 mb-4" style="color: black;" href="https://www.google.co.uk/travel/flights">
+        <a class="col-12 mb-4" style="color: black;" href="{% url 'listing_details' listing_id=listing.id listing_title=listing.title|slugify %}">
             <div class="card">
                 <div class="row">
                     {% if listing.url %}
@@ -17,8 +17,8 @@
                     {% endif %}
                     <div class="col-md-10">
                         <div class="card-body">
-                            <h4 class="card-title">{{ listing.title }}</h4>
-                            <p class="card-text">{{ listing.description }}</p>
+                            <h4 class="card-title">{{ listing.title|capfirst }}</h4>
+                            <p class="card-text">{{ listing.description|capfirst }}</p>
                             <p class="card-text">Bid: ${{ listing.starting_bid | intcomma }}</p>
                         </div>
                     </div>
