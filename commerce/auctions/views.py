@@ -5,12 +5,13 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from .models import User, Category, Listing, Bid, Comment, Watchlist
+from . import util
 
 
 def index(request):
     
     return render(request, "auctions/index.html",{
-        "listings": Listing.objects.all()
+        "listings": Listing.objects.filter(closed = False)
     })
 
 
@@ -71,10 +72,27 @@ def listing_details(request, listing_id, listing_title):
         watchlist_entry_exists = Watchlist.objects.filter(user=request.user, listing=listing).exists()
     except:
         watchlist_entry_exists = False
-    return render(request, "auctions/listing.html", {
+        
+    if request.method == "POST":
+        bid_submitted = round(float(request.POST.get("Bid")), 2)
+        message, allert_type = util.post_bid(request.user, listing, bid_submitted)
+        return render(request, "auctions/listing.html", {
         "listing": listing,
         "watchlist_entry_exists": watchlist_entry_exists,
-    })
+        "message": message,
+        "allert_type": allert_type,
+        "bid_status": util.get_highest_bid(listing),
+        "creator": request.user == listing.created_by,
+        "listing_status": listing.closed,
+        })
+    else:
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "watchlist_entry_exists": watchlist_entry_exists,
+            "bid_status": util.get_highest_bid(listing),
+            "creator": request.user == listing.created_by,
+            "listing_status": listing.closed,
+        })
 
 
 def create_listing(request):
@@ -91,6 +109,7 @@ def create_listing(request):
             title=title,
             description=description,
             starting_bid=starting_bid,
+            current_bid=starting_bid,
             url=url,
             category_id=category_id,
             created_by=created_by
@@ -125,6 +144,17 @@ def watchlist_action(request, listing_id, listing_title):
     else:
         # Watchlist entry doesn't exist, add it
         Watchlist.objects.create(user=request.user, listing=listing)
+
+    return redirect("listing_details", listing_id=listing_id, listing_title=listing_title)
+  
+        
+def bid_close(request, listing_id, listing_title):
+    listing = Listing.objects.get(id=listing_id)
+    if listing.closed:
+        listing.closed = False
+    else:
+        listing.closed = True
+    listing.save()
 
     return redirect("listing_details", listing_id=listing_id, listing_title=listing_title)
         
