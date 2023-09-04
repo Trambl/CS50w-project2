@@ -19,8 +19,8 @@
                 {% endif %}
                 <div class="col-md-10">
                     <div class="card-body">
-                        <h4 class="card-title">{{ listing.title }}</h4>
-                        <p class="card-text">{{ listing.description }}</p>
+                        <h4 class="card-title">{{ listing.title|capfirst }}</h4>
+                        <p class="card-text">{{ listing.description|capfirst }}</p>
                         <p class="card-text">Bid: ${{ listing.current_bid | intcomma }}</p>
                     </div>
                 </div>

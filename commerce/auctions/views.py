@@ -9,7 +9,6 @@ from . import util
 
 
 def index(request):
-    
     return render(request, "auctions/index.html",{
         "listings": Listing.objects.filter(closed = False)
     })
@@ -66,12 +65,20 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
     
+    
 def listing_details(request, listing_id, listing_title):
     listing = Listing.objects.get(id=listing_id)
+    comments = Comment.objects.filter(listing=listing).order_by('-timestamp')
     try:
         watchlist_entry_exists = Watchlist.objects.filter(user=request.user, listing=listing).exists()
     except:
         watchlist_entry_exists = False
+    
+    lattest_bid_user = util.get_highest_bid(listing)
+    if lattest_bid_user == request.user:
+        listing_winner = "Congrats. You're the winner on this listing."
+    else: 
+        listing_winner = f"Bidding is closed. The winner is: {lattest_bid_user}"
         
     if request.method == "POST":
         bid_submitted = round(float(request.POST.get("Bid")), 2)
@@ -81,21 +88,26 @@ def listing_details(request, listing_id, listing_title):
         "watchlist_entry_exists": watchlist_entry_exists,
         "message": message,
         "allert_type": allert_type,
-        "bid_status": util.get_highest_bid(listing),
+        "listing_winner": listing_winner,
+        "bid_status": lattest_bid_user,
         "creator": request.user == listing.created_by,
         "listing_status": listing.closed,
+        "comments": comments,
         })
     else:
         return render(request, "auctions/listing.html", {
             "listing": listing,
             "watchlist_entry_exists": watchlist_entry_exists,
-            "bid_status": util.get_highest_bid(listing),
+            "bid_status": lattest_bid_user,
+            "listing_winner": listing_winner,
             "creator": request.user == listing.created_by,
             "listing_status": listing.closed,
+            "comments": comments,
         })
 
 
 def create_listing(request):
+    sorted_categories = Category.objects.all().order_by('category')
     if request.method == "POST":
         title = request.POST.get("title")
         description = request.POST.get("description")
@@ -118,12 +130,13 @@ def create_listing(request):
     
         return render(request, "auctions/create_listing.html", {
             "message": "Listing created.",
-            "categories": Category.objects.all()
+            "categories": sorted_categories
         })
     else:
         return render(request, "auctions/create_listing.html", {
-            "categories": Category.objects.all()
+            "categories": sorted_categories
         })
+    
     
 def watchlist(request):
     watchlist_entries = Watchlist.objects.filter(user=request.user)
@@ -158,3 +171,27 @@ def bid_close(request, listing_id, listing_title):
 
     return redirect("listing_details", listing_id=listing_id, listing_title=listing_title)
         
+        
+def comment_post(request, listing_id, listing_title):
+    comment = request.POST.get("comment")
+    listing = Listing.objects.get(id=listing_id)
+    new_comment = Comment(
+        listing=listing,
+        user=request.user,
+        comment=comment,
+    )
+    new_comment.save()
+    return redirect("listing_details", listing_id=listing_id, listing_title=listing_title)
+
+
+def categories(request):
+    return render(request, "auctions/categories.html", {
+            "categories": Category.objects.all().order_by('category')
+        })
+
+
+def filtered(request, category):
+    category_id = Category.objects.get(category=category)
+    return render(request, "auctions/index.html",{
+        "listings": Listing.objects.filter(category=category_id)
+    })
