@@ -77,7 +77,9 @@ def listing_details(request, listing_id, listing_title):
     lattest_bid_user = util.get_highest_bid(listing)
     if lattest_bid_user == request.user:
         listing_winner = "Congrats. You're the winner on this listing."
-    else: 
+    elif lattest_bid_user == "No bids made so far.": 
+        listing_winner = f"No bids have been made. Listin is closed without winner identified."
+    else:
         listing_winner = f"Bidding is closed. The winner is: {lattest_bid_user}"
         
     if request.method == "POST":
