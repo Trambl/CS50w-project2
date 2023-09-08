@@ -13,10 +13,10 @@ def post_bid(user, listing, bid_amount):
     else:
         if listing.current_bid < bid_amount:
             return bid_success(user, listing, bid_amount)
-        else:
-            message = "Bid should be larger then current listing price."
-            allert_type = "danger"
-            return message, allert_type
+    message = "Bid should be larger then current listing price."
+    allert_type = "danger"
+    return message, allert_type
+    
     
 def bid_success(user, listing, bid_amount):
     new_bid = Bid(
@@ -31,8 +31,10 @@ def bid_success(user, listing, bid_amount):
     allert_type = "primary"
     return message, allert_type
 
+
 def is_creator(user, listing):
     return user == listing.created_by
+            
             
 def get_highest_bid(listing):
     try:
@@ -41,6 +43,6 @@ def get_highest_bid(listing):
         if highest_bid:
             return highest_bid.user
         else:
-            return f"No bids made so far."
+            return "No bids made so far."
     except Bid.DoesNotExist:
-        return f"No bids made so far."
+        return "No bids made so far."

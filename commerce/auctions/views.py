@@ -75,16 +75,21 @@ def listing_details(request, listing_id, listing_title):
         watchlist_entry_exists = False
     
     lattest_bid_user = util.get_highest_bid(listing)
-    if lattest_bid_user == request.user:
+    print("lattest_bid_user:", lattest_bid_user)  # Add this line for debugging
+
+    if lattest_bid_user == "No bids made so far.":
+        listing_winner = "No bids made so far."
+    elif lattest_bid_user == request.user:
         listing_winner = "Congrats. You're the winner on this listing."
-    elif lattest_bid_user == "No bids made so far.": 
-        listing_winner = f"No bids have been made. Listin is closed without winner identified."
     else:
         listing_winner = f"Bidding is closed. The winner is: {lattest_bid_user}"
-        
+    
+    print("request.user:", request.user)  # Add this line for debugging
+
     if request.method == "POST":
         bid_submitted = round(float(request.POST.get("Bid")), 2)
         message, allert_type = util.post_bid(request.user, listing, bid_submitted)
+        lattest_bid_user = util.get_highest_bid(listing)
         return render(request, "auctions/listing.html", {
         "listing": listing,
         "watchlist_entry_exists": watchlist_entry_exists,
@@ -106,6 +111,7 @@ def listing_details(request, listing_id, listing_title):
             "listing_status": listing.closed,
             "comments": comments,
         })
+
 
 
 def create_listing(request):
